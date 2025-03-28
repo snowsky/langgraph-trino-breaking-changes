@@ -1,0 +1,3 @@
+gradio
+# local package
+-e my_agent

@@ -1,0 +1,11 @@
+.env
+venv
+.ipynb_checkpoints
+.langgraph-data
+.gradio
+.langgraph_api
+__pycache__
+**/__pycache__
+ollama
+langgraph_eng_package.egg-info
+output/*

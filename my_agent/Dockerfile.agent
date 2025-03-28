@@ -1,0 +1,19 @@
+# Use official Python 3.13 slim image as base
+FROM python:3.13-slim
+
+# Set working directory
+WORKDIR /project
+
+# Update package lists and install Python and pip
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends g++ && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy the current folder contents
+COPY . .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r my_agent/requirements.txt
+
+# Run the application
+CMD ["python3", "run_agent.py"]

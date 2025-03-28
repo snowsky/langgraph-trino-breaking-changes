@@ -1,0 +1,11 @@
+bs4
+requests
+langgraph
+langchain_ollama
+langchain
+# for backend/
+fastapi
+uvicorn
+crawl4ai
+# local package
+-e my_agent

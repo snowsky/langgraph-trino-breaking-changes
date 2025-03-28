@@ -1,0 +1,102 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - 11434:11434
+    volumes:
+      - .:/code
+      - ./ollama/ollama:/root/.ollama
+    container_name: ollama
+    pull_policy: always
+    tty: true
+    restart: always
+    entrypoint: ["/code/entrypoint.sh"]
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_TIMEOUT=10
+      - OLLAMA_MAX_PARALLEL_REQUESTS=10
+      # variables also used in agent container
+      - OLLAMA_MODEL_NAME=llama3.2
+      - OLLAMA_EMBEDDINGS_MODEL=nomic-embed-text
+    healthcheck:
+      test: curl -f http://localhost:11434/api/version || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    # networks:
+    #   - ollama-docker
+
+  ollama-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: ollama-webui
+    volumes:
+      - ./ollama/ollama-webui:/app/backend/data
+    depends_on:
+      - ollama
+    ports:
+      - 8080:8080
+    environment: # https://docs.openwebui.com/getting-started/env-configuration#default_models
+      - OLLAMA_BASE_URLS=http://host.docker.internal:11434 #comma separated ollama hosts
+      - WEBUI_AUTH=False
+      - WEBUI_NAME=Trino
+      - WEBUI_URL=http://localhost:8080
+      - WEBUI_SECRET_KEY=t0p-s3cr3t
+      - BYPASS_MODEL_ACCESS_CONTROL=True
+      - DEFAULT_MODELS=llama3.2,deepseek-r1:1.5b
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    restart: unless-stopped
+    # networks:
+    #   - trino-docker
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.backend
+    command: uvicorn app:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+
+  agent:
+    build:
+      context: .
+      dockerfile: ./my_agent/Dockerfile.agent
+    depends_on:
+      ollama:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    # restart: unless-stopped
+    volumes:
+      - .:/project
+    environment:
+      - COLLECTION_NAME=my_collection
+      - BACKEND_CRAWLSVC_URL=http://backend:8000
+      - TRINO_RELEASE_URL=https://trino.io/docs/current/release.html
+      - OLLAMA_MODEL_NAME=llama3.2
+      - OLLAMA_EMBEDDINGS_MODEL=nomic-embed-text
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_NUM_CTX=8192
+      - LOG_LEVEL=INFO  # Can be DEBUG, INFO, WARNING, ERROR, CRITICAL
+      - VERSION_START=${VERSION_START}
+      - VERSION_END=${VERSION_END}
+
+  gradio:
+    build:
+      context: .
+      dockerfile: gradio/Dockerfile.gradio
+    ports:
+      - "7860:7860"
+    depends_on:
+      - backend
+      - agent
+    volumes:
+      - .:/app
+    environment:
+      # variables also used in agent container
+      - BACKEND_CRAWLSVC_URL=http://backend:8000
+      - OLLAMA_BASE_URL=http://ollama:11434
