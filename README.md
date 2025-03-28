@@ -38,7 +38,7 @@ cp .env.example .env
 2. Start all services using Docker Compose and see live logs:
 
 ```bash
-docker-compose up
+docker-compose up --build
 ```
 
 This will start:
@@ -85,6 +85,10 @@ Once the Gradio interface is running, open your browser and navigate to [http://
 ```
 python run_agent.py
 ```
+
+## Output files
+
+Example summary and markdown files can be found under `output` folder.
 
 ## Environment Variables
 
