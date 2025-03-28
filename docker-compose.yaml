@@ -20,13 +20,17 @@ services:
       - OLLAMA_MODEL_NAME=llama3.2
       - OLLAMA_EMBEDDINGS_MODEL=nomic-embed-text
     healthcheck:
-      test: curl -f http://localhost:11434/api/version || exit 1
+      test: |
+        count=$(curl localhost:11434/api/tags | jq '[.models[] | select(.name == "llama3.2:latest")] | length')
+        if [ "$count" -eq 1 ]; then
+          exit 0
+        else
+          exit 1
+        fi
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 60s
-    # networks:
-    #   - ollama-docker
 
   ollama-webui:
     image: ghcr.io/open-webui/open-webui:main
@@ -48,8 +52,6 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
     restart: unless-stopped
-    # networks:
-    #   - trino-docker
 
   backend:
     build:
@@ -70,7 +72,6 @@ services:
         condition: service_healthy
       backend:
         condition: service_started
-    # restart: unless-stopped
     volumes:
       - .:/project
     environment:

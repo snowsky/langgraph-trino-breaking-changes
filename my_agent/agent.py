@@ -87,12 +87,16 @@ def main(version_start: str, version_end: str):
     logger.info(f"Analysis complete for versions {version_start} to {version_end}")
     markdown_output = json_to_markdown(json.dumps(result["breaking_changes"]))
 
-    # Write output to a file
+    # Write outputs to files
     output_dir = "./output"
-    output_file = os.path.join(output_dir, "result_output.txt")
-    with open(output_file, "w") as f:
-        f.write(f"Summary:\n{result['summary']}\n\nMarkdown Output:\n{markdown_output}")
-    logger.info(f"Results written to {output_file}")
+    summary_file = os.path.join(output_dir, "summary.txt")
+    breaking_changes_file = os.path.join(output_dir, "breaking_changes.md")
+    with open(summary_file, "w") as f:
+        f.write(f"Summary:\n\n{result['summary']}\n")
+        logger.info(f"Results written to {summary_file}")
+    with open(breaking_changes_file, "w") as f:
+        f.write(markdown_output)
+        logger.info(f"Results written to {breaking_changes_file}")
 
     return result["summary"], markdown_output
 

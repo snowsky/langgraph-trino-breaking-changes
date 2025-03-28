@@ -1,0 +1,39 @@
+Summary:
+
+Here is a summary of the changes from version 410 to 450:
+
+**Removed Features**
+
+* Late materialization (version 410)
+* Null-suppression from RowBlock fields (version 410)
+* Legacy table statistics tracking (version 434)
+* Support for legacy create-table-with-existing-location enabled (version 435)
+* Registering external tables with CREATE TABLE and location table property (version 435)
+* Spill-compression-enabled configuration property (version 437, deprecated)
+* Legacy materialized-view-grace-period configuration property (version 445, removed)
+* Deprecated PARTITION_COLUMN and PARTITION_VALUE arguments from flush_metadata_cache procedure (version 445, replaced with PARTITION_COLUMNS and PARTITION_VALUES)
+
+**Updated Configuration Properties**
+
+* Renamed query.max-writer-tasks-count to query.max-writer-task-count (version 434)
+* Disallowed invalid configuration options (versions 434 and 441)
+* Removed max_writer_tasks_count session property (version 434)
+* Removed default legacy mode for hive.security configuration property (version 441) and updated the default value to allow-all
+* Updated exchange.compression-enabled and exchange_compression_codec properties (version 437)
+* Updated spill-compression-codec property (version 437)
+* Disallowed deprecated legacy type mapping and the associated redshift.use-legacy-type-mapping configuration property (version 447)
+* Updated hive.metastore configuration property to glue-v1 for temporary restoration of old implementation (version 448)
+
+**New Features**
+
+* Improved performance of caching data on local storage (version 439, deprecation of hive.cache.enabled)
+* Removed defunct *.http-client.max-connections properties (version 440)
+* Added required ConnectorSession parameter to TableFunctionProcessorProvider.getDataProcessor (version 434)
+* Added support for ElasticSearch version 8 and removed support for ElasticSearch version 6 (version 436)
+* Added support for V2 of the Nessie REST API (version 450)
+
+**Other Changes**
+
+* Require JDK 21.0.1 to run Trino, including updated JVM config (version 436)
+* Require JDK 22 to run Trino, including updated JVM config (version 447)
+* Improved performance of aggregations containing a DISTINCT clause (version 450)

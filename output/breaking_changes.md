@@ -1,46 +1,3 @@
-Summary:
-The changes from version 410 to 450 are:
-
-- Removed support for late materialization, including experimental.late-materialization.enabled and experimental.work-processor-pipelines configuration properties.
-- Removed null-suppression from RowBlock fields, replacing old factory methods with new ones.
-
-- Renamed query.max-writer-tasks-count configuration property to query.max-writer-task-count and max_writer_task_count session property.
-- Disallowed invalid configuration options.
-- Removed support for legacy table statistics tracking.
-- Added required ConnectorSession parameter to the method TableFunctionProcessorProvider.getDataProcessor.
-
-- Removed support for registering external tables with CREATE TABLE and the location table property, replacing with register_table procedure.
-- Required JDK 21.0.1 to run Trino, including updated JVM config.
-- Added support for ElasticSearch version 8 and removed support for ElasticSearch version 6.
-
-- Replaced exchange.compression-enabled configuration property with exchange_compression_codec properties.
-- Replaced spill-compression-enabled configuration property with spill-compression-codec property.
-- Removed deprecated experimental.spill-compression-enabled configuration property.
-
-- Improved performance of caching data on local storage, deprecating hive.cache.enabled in favor of fs.cache.enabled.
-- Removed the default legacy mode for hive.security configuration property and changed the default value to allow-all.
-- Added support for V2 of the Nessie REST API.
-
-- Disallowed registering external tables with catalog properties delta.max-initial-splits and delta.max-initial-split-size, and removed catalog session property max_initial_split_size.
-
-- Removed deprecated legacy.materialized-view-grace-period configuration property.
-- Removed PARTITION_COLUMN and PARTITION_VALUE arguments from flush_metadata_cache procedure in favor of PARTITION_COLUMNS and PARTITION_VALUES.
-
-- Enabled bigquery.arrow-serialization.enabled by default.
-- Required JDK 22 to run Trino, including updated JVM config.
-- Removed support for Phoenix versions 5.1.x and earlier.
-- Removed deprecated legacy type mapping and the associated redshift.use-legacy-type-mapping configuration property.
-
-- Updated Glue to V2 REST interface, ignoring certain configuration properties in the process.
-- Added support for V2 of the Nessie REST API.
-
-- Removed support for non-gRPC clients and pinot.grpc.enabled and pinot.estimated-size-in-bytes-for-non-numeric-column configuration properties.
-
-- Improved performance of aggregations containing a DISTINCT clause, replacing old optimizer properties with new ones.
-- Automatically configured BigQuery scan parallelism, removing bigquery.parallelism configuration property.
-- Added support for V2 of the Nessie REST API.
-
-Markdown Output:
 # Breaking Changes Summary
 
 ## Version 432
@@ -234,3 +191,4 @@ bigquery.parallelism configuration property. (#22279)
 * ⚠️ Breaking change: Add support for V2 of the Nessie REST API. Previous behavior can
 be restored by setting the iceberg.nessie-catalog.client-api-version
 configuration property to V1. (#22215)
+
