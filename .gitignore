@@ -8,4 +8,3 @@ __pycache__
 **/__pycache__
 ollama
 langgraph_eng_package.egg-info
-output/*
