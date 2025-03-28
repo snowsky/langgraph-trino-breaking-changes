@@ -1,6 +1,8 @@
 #!/bin/bash
 
-apt update && apt install -y curl
+if ! command -v curl >/dev/null 2>&1 || ! command -v jq >/dev/null 2>&1; then
+    apt-get update && apt-get install -y curl jq && rm -rf /var/lib/apt/lists/*
+fi
  
 # Start Ollama in the background.
 /bin/ollama serve &
@@ -11,7 +13,6 @@ pid=$!
 sleep 5
 
 echo " Retrieve LLAMA3 model..."
-ollama pull ${OLLAMA_EMBEDDINGS_MODEL}
 ollama pull ${OLLAMA_MODEL_NAME}
 echo " Done!"
 

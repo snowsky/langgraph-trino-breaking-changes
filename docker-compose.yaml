@@ -4,33 +4,26 @@ services:
     ports:
       - 11434:11434
     volumes:
-      - .:/code
+      - ./scripts:/scripts
       - ./ollama/ollama:/root/.ollama
     container_name: ollama
     pull_policy: always
     tty: true
     restart: always
-    entrypoint: ["/code/entrypoint.sh"]
+    entrypoint: ["/scripts/entrypoint.sh"]
     environment:
       - OLLAMA_KEEP_ALIVE=24h
       - OLLAMA_HOST=0.0.0.0
       - OLLAMA_TIMEOUT=10
       - OLLAMA_MAX_PARALLEL_REQUESTS=10
       # variables also used in agent container
-      - OLLAMA_MODEL_NAME=llama3.2
-      - OLLAMA_EMBEDDINGS_MODEL=nomic-embed-text
+      - OLLAMA_MODEL_NAME=${OLLAMA_MODEL_NAME}
     healthcheck:
-      test: |
-        count=$(curl localhost:11434/api/tags | jq '[.models[] | select(.name == "llama3.2:latest")] | length')
-        if [ "$count" -eq 1 ]; then
-          exit 0
-        else
-          exit 1
-        fi
-      interval: 30s
-      timeout: 5s
+      test: ["CMD-SHELL", "curl -f http://localhost:11434/api/tags"]
+      interval: 10s
+      timeout: 2s
       retries: 3
-      start_period: 60s
+      start_period: 20s
 
   ollama-webui:
     image: ghcr.io/open-webui/open-webui:main
@@ -74,12 +67,12 @@ services:
         condition: service_started
     volumes:
       - .:/project
+    restart: always
     environment:
       - COLLECTION_NAME=my_collection
       - BACKEND_CRAWLSVC_URL=http://backend:8000
       - TRINO_RELEASE_URL=https://trino.io/docs/current/release.html
-      - OLLAMA_MODEL_NAME=llama3.2
-      - OLLAMA_EMBEDDINGS_MODEL=nomic-embed-text
+      - OLLAMA_MODEL_NAME=${OLLAMA_MODEL_NAME}
       - OLLAMA_BASE_URL=http://ollama:11434
       - OLLAMA_NUM_CTX=8192
       - LOG_LEVEL=INFO  # Can be DEBUG, INFO, WARNING, ERROR, CRITICAL

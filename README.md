@@ -99,7 +99,6 @@ COLLECTION_NAME=my_collection
 BACKEND_CRAWLSVC_URL=http://backend:8000 
 TRINO_RELEASE_URL=https://trino.io/docs/current/release.html
 OLLAMA_MODEL_NAME=llama3.2
-OLLAMA_EMBEDDINGS_MODEL=nomic-embed-text
 OLLAMA_BASE_URL=http://ollama:11434
 OLLAMA_NUM_CTX=8192
 ```
