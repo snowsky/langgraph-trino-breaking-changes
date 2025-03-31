@@ -2,18 +2,21 @@ import os
 import json
 
 # Use absolute imports
-from my_agent.my_graph.nodes import analyze_changes, summarize
+from my_agent.my_graph.nodes import analyze_changes, summarize_breaking_changes
 from my_agent.models.schemas import ExtractionState, ReleaseLinks, VersionInput
 from my_agent.services.llm import create_llm_model
 from my_agent.utils.text import json_to_markdown
 from my_agent.utils.load_page import load_page_contents
 from my_agent.config import (
     TRINO_RELEASE_URL,
+    TRINO_VERSION_URL,
+    VERSION_SUMMARY_PROMPT
 )
 from my_agent.utils.logging_config import logger
 
 from langgraph.graph import StateGraph, END
 from langchain_ollama import ChatOllama
+from langchain_core.messages import HumanMessage
 
 
 # Graph nodes
@@ -26,20 +29,20 @@ def validate_input(state: ExtractionState) -> ExtractionState:
 # Build the graph with model injected into the process node
 def create_extraction_graph(model: ChatOllama):
     workflow = StateGraph(ExtractionState)
-    
+
     workflow.add_node("validate_input", validate_input)
     workflow.add_node("analyze_changes", analyze_changes)
-    workflow.add_node("summarize", lambda state: summarize(state, model))
+    workflow.add_node("summarize_breaking_changes", lambda state: summarize_breaking_changes(state, model))
 
     workflow.set_entry_point("validate_input")
     workflow.add_edge("validate_input", "analyze_changes")
-    workflow.add_edge("analyze_changes", "summarize")
-    workflow.add_edge("summarize", END)
-    
+    workflow.add_edge("analyze_changes", "summarize_breaking_changes")
+    workflow.add_edge("summarize_breaking_changes", END)
+
     return workflow.compile()
 
 # Main function
-def extract_release_links(page_contents: str, version_start: str, version_end: str, model: ChatOllama) -> ExtractionState:
+def extract_release_details(page_contents: str, version_start: str, version_end: str, model: ChatOllama) -> ExtractionState:
     """Extract release note URLs for two specified Trino versions from page_contents."""
     try:
         # Validate inputs using Pydantic
@@ -62,7 +65,7 @@ def extract_release_links(page_contents: str, version_start: str, version_end: s
     except Exception as e:
         return {"error": f"Input validation error: {str(e)}"}
 
-def main(version_start: str, version_end: str):
+def check_breaking_changes(version_start: str, version_end: str):
     logger.debug(f"Starting analysis for versions {version_start} to {version_end}")
     
     # Initialize services
@@ -78,7 +81,7 @@ def main(version_start: str, version_end: str):
     logger.debug(f"Content loaded, size: {len(large_prompt)}")
     
     # Process breaking changes
-    result = extract_release_links(large_prompt, version_start, version_end, model)
+    result = extract_release_details(large_prompt, version_start, version_end, model)
     if "breaking_changes" not in result or "summary" not in result:
         logger.error("No breaking changes or summary found")
         logger.debug(f"Result: {result}")
@@ -89,7 +92,7 @@ def main(version_start: str, version_end: str):
 
     # Write outputs to files
     output_dir = "./output"
-    summary_file = os.path.join(output_dir, "summary.txt")
+    summary_file = os.path.join(output_dir, "summary_breaking_changes.md")
     breaking_changes_file = os.path.join(output_dir, "breaking_changes.md")
     with open(summary_file, "w") as f:
         f.write(f"Summary:\n\n{result['summary']}\n")
@@ -100,6 +103,39 @@ def main(version_start: str, version_end: str):
 
     return result["summary"], markdown_output
 
+def summarize_release_version(version: str, summary_prompt: str = None):
+    """Summarize the version release notes."""
+    logger.debug(f"Starting analysis for version {version}")
+    
+    # Initialize services
+    model = create_llm_model()
+    logger.debug("LLM model initialized")
+    
+    # Load content in markdown format
+    full_version_url = f"{TRINO_VERSION_URL}-{version}.html"
+    large_prompt = load_page_contents(full_version_url)
+    if not large_prompt:
+        logger.error(f"Error loading page contents from {full_version_url}")
+        return None
+    
+    logger.debug(f"Content loaded, size: {len(large_prompt)}")
+    
+    # Use the provided summary prompt or the default one
+    prompt = f'{summary_prompt or VERSION_SUMMARY_PROMPT}: {version}'
+    message = HumanMessage(content=f"{prompt}\nContext: {large_prompt}")
+    response = model.invoke([message])
+    summary_response = response.content
+    print(summary_response)
+
+    # Write outputs to files
+    output_dir = "./output"
+    summary_file = os.path.join(output_dir, f"summary_release_{version}.md")
+    with open(summary_file, "w") as f:
+        f.write(f"Summary:\n\n{summary_response}\n")
+        logger.info(f"Results written to {summary_file}")
+
+    return summary_response
+
 if __name__ == "__main__":
     try:
         version_start = os.environ["VERSION_START"]
@@ -107,4 +143,4 @@ if __name__ == "__main__":
     except KeyError:
         print("Environment variable 'VERSION_START' or 'VERSION_END' is not defined!")
         os.exit(1)
-    main(version_start=version_start, version_end=version_end)
+    check_breaking_changes(version_start=version_start, version_end=version_end)

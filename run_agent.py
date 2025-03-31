@@ -2,7 +2,7 @@ import os
 import sys
 import time
 import threading
-from my_agent import main
+from my_agent import check_breaking_changes
 
 def print_dots():
     """Print dots until the main task finishes."""
@@ -25,7 +25,7 @@ try:
 except KeyError:
     print("Environment variable 'VERSION_START' or 'VERSION_END' is not defined!")
     os._exit(1)
-summary, breaking_changes = main(version_start=version_start, version_end=version_end)
+summary, breaking_changes = check_breaking_changes(version_start=version_start, version_end=version_end)
 
 print("Summary:")
 print(summary)

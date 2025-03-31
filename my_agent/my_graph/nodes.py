@@ -3,6 +3,10 @@ from bs4 import BeautifulSoup
 from langchain_core.messages import HumanMessage
 from models.schemas import ExtractionState
 from my_agent.utils.logging_config import logger
+from my_agent.config import (
+    TRINO_VERSION_URL,
+    BREAKING_CHANGES_SUMMARY_PROMPT
+)
 
 def validate_input(state: ExtractionState) -> ExtractionState:
     """Validate the initial input"""
@@ -10,9 +14,9 @@ def validate_input(state: ExtractionState) -> ExtractionState:
         state["release_links"].error = "Invalid or empty page_contents content"
     return state
 
-def summarize(state: ExtractionState, model) -> ExtractionState:
+def summarize_breaking_changes(state: ExtractionState, model) -> ExtractionState:
     """Summarize the changes"""
-    prompt = f'Summarize the changes from version {state["versions"].version_start} to {state["versions"].version_end}'
+    prompt = f'{BREAKING_CHANGES_SUMMARY_PROMPT}: {state["versions"].version_start} to {state["versions"].version_end}'
     message = HumanMessage(content=f"{prompt}\nContext: {state['breaking_changes']}")
     response = model.invoke([message])
     state["summary"] = response.content
@@ -30,7 +34,7 @@ def analyze_changes(state: ExtractionState) -> ExtractionState:
     end = int(state["versions"].version_end)
 
     for version in range(start, end + 1):
-        url = f"https://trino.io/docs/current/release/release-{version}.html"
+        url = f"{TRINO_VERSION_URL}-{version}.html"
         try:
             content = requests.get(url).text
             soup = BeautifulSoup(content, 'html.parser')

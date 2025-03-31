@@ -1,3 +1,5 @@
 gradio
+langchain
+langchain-community
 # local package
 -e my_agent

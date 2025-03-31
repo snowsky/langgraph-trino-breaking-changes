@@ -1,8 +1,9 @@
 bs4
 requests
+langchain
 langgraph
 langchain_ollama
-langchain
+langchain-community
 # for backend/
 fastapi
 uvicorn
